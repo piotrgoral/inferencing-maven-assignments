@@ -37,6 +37,12 @@ class StreamChoice(BaseModel):
     finish_reason: str | None = None
 
 
+class ChatCompletionChunk(BaseModel):
+    id: str
+    object: str = "chat.completion.chunk"
+    choices: list[StreamChoice]
+
+
 class BackendResponse(BaseModel):
     choices: list[Choice]
 

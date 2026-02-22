@@ -9,6 +9,9 @@ from models import (
     Usage,
     ChatRequest,
     BackendResponse,
+    ChatCompletionChunk,
+    StreamChoice,
+    DeltaMessage,
 )
 
 
@@ -72,18 +75,17 @@ def normalize_response(content: str, request_id: str, prompt: str) -> GatewayRes
 async def echo_stream(content: str, req_id: str):
     """Generate SSE chunks from a plain string, one character at a time."""
     for char in content:
-        chunk = {
-            "id": req_id,
-            "object": "chat.completion.chunk",
-            "choices": [
-                {
-                    "index": 0,
-                    "delta": {"content": char},
-                    "finish_reason": None,
-                }
+        chunk = ChatCompletionChunk(
+            id=req_id,
+            choices=[
+                StreamChoice(
+                    index=0,
+                    delta=DeltaMessage(content=char),
+                    finish_reason=None,
+                )
             ],
-        }
-        yield f"data: {json.dumps(chunk)}\n\n"
+        )
+        yield f"data: {chunk.model_dump_json()}\n\n"
         await asyncio.sleep(0)  # yield to event loop
     yield "data: [DONE]\n\n"
 
@@ -126,18 +128,17 @@ async def stream_from_backend(
                 content = backend_resp.choices[0].message.content
 
                 # Return one SSE chunk with full content, then [DONE]
-                chunk = {
-                    "id": req_id,
-                    "object": "chat.completion.chunk",
-                    "choices": [
-                        {
-                            "index": 0,
-                            "delta": {"content": content},
-                            "finish_reason": None,
-                        }
+                chunk = ChatCompletionChunk(
+                    id=req_id,
+                    choices=[
+                        StreamChoice(
+                            index=0,
+                            delta=DeltaMessage(content=content),
+                            finish_reason=None,
+                        )
                     ],
-                }
-                yield f"data: {json.dumps(chunk)}\n\n"
+                )
+                yield f"data: {chunk.model_dump_json()}\n\n"
                 yield "data: [DONE]\n\n"
     except Exception as e:
         # On error, return error message as SSE chunk

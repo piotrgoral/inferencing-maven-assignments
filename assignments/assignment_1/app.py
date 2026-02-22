@@ -58,7 +58,8 @@ async def chat_completions(
 
     # Handle streaming requests
     if request.stream:
-
+        # no try/except: stream_from_backend handles errors internally and yields them as SSE chunks;
+        # by the time a generator exception could propagate, the 200 response headers are already sent and it's too late to return 500
         async def event_generator():
             if BACKEND_URL:
                 async for chunk in stream_from_backend(
@@ -79,7 +80,7 @@ async def chat_completions(
             headers={"X-Request-ID": req_id},
         )
 
-    # Non-streaming path (existing behavior)
+    # Non-streaming path
     try:
         content = (
             await fetch_from_backend(

@@ -260,7 +260,7 @@ else
 fi
 
 # Check for echo content (extract content from chunks and reconstruct)
-EXTRACTED_CONTENT=$(echo "$STREAM_RESPONSE" | grep -o '"content": "[^"]*"' | sed 's/"content": "//g' | sed 's/"//g' | tr -d '\n')
+EXTRACTED_CONTENT=$(echo "$STREAM_RESPONSE" | grep '"content"' | sed 's/.*"content" *: *"\([^"]*\)".*/\1/' | tr -d '\n')
 if echo "$EXTRACTED_CONTENT" | grep -q "Echo: Hi"; then
     echo "✓ Test 4 PASSED: Echo content found in stream"
 else
@@ -346,7 +346,7 @@ else
 fi
 
 # Check for "Mock" content (extract content from chunks and reconstruct)
-EXTRACTED_CONTENT2=$(echo "$STREAM_RESPONSE2" | grep -o '"content": "[^"]*"' | sed 's/"content": "//g' | sed 's/"//g' | tr -d '\n')
+EXTRACTED_CONTENT2=$(echo "$STREAM_RESPONSE2" | grep '"content"' | sed 's/.*"content" *: *"\([^"]*\)".*/\1/' | tr -d '\n')
 if echo "$EXTRACTED_CONTENT2" | grep -q "Mock"; then
     echo "✓ Test 5 PASSED: Backend content 'Mock' found in stream"
 else
