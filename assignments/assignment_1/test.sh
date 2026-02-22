@@ -1,13 +1,38 @@
 #!/bin/bash
 
 # Test script for Assignment 1 Gateway
-# Make sure the gateway is running on localhost:8080
+# Starts gateway instances as needed for each test
 
 BASE_URL="${BASE_URL:-http://localhost:8080}"
+
+# Initialize PID variables
+ECHO_GATEWAY_PID=""
+MOCK_PID=""
+GATEWAY_PID=""
+
+# Cleanup function
+cleanup() {
+    echo ""
+    echo "Cleaning up background processes..."
+    [ -n "$ECHO_GATEWAY_PID" ] && kill $ECHO_GATEWAY_PID 2>/dev/null
+    [ -n "$MOCK_PID" ] && kill $MOCK_PID 2>/dev/null
+    [ -n "$GATEWAY_PID" ] && kill $GATEWAY_PID 2>/dev/null
+    wait $ECHO_GATEWAY_PID $MOCK_PID $GATEWAY_PID 2>/dev/null
+}
+
+# Set trap to cleanup on exit
+trap cleanup EXIT INT TERM
 
 echo "Testing Assignment 1 Gateway..."
 echo "Base URL: $BASE_URL"
 echo ""
+
+# Start gateway in echo mode for Tests 1 and 2
+echo "Starting gateway in echo mode on port 8080..."
+cd "$(dirname "$0")"
+PORT=8080 poetry run python app.py > /tmp/echo_gateway.log 2>&1 &
+ECHO_GATEWAY_PID=$!
+sleep 2   # wait for uvicorn to be ready
 
 # Test 1: Echo mode - basic request
 echo "Test 1: Echo mode (no backend)"
@@ -78,25 +103,19 @@ fi
 
 echo ""
 
+# Stop echo-mode gateway before starting Test 3
+echo "Stopping echo-mode gateway..."
+kill $ECHO_GATEWAY_PID 2>/dev/null
+wait $ECHO_GATEWAY_PID 2>/dev/null
+ECHO_GATEWAY_PID=""
+sleep 1   # ensure port 8080 is free before Test 3 restarts it
+
 # Test 3: Backend forwarding with mock backend
 echo "Test 3: Backend forwarding with mock backend"
 MOCK_PORT="${MOCK_PORT:-8081}"
 GATEWAY_PORT="${GATEWAY_PORT:-8080}"
 MOCK_URL="http://localhost:$MOCK_PORT"
 GATEWAY_URL="http://localhost:$GATEWAY_PORT"
-
-# Cleanup function
-cleanup() {
-    echo ""
-    echo "Cleaning up background processes..."
-    [ -n "$MOCK_PID" ] && kill $MOCK_PID 2>/dev/null
-    [ -n "$GATEWAY_PID" ] && kill $GATEWAY_PID 2>/dev/null
-    wait $MOCK_PID 2>/dev/null
-    wait $GATEWAY_PID 2>/dev/null
-}
-
-# Set trap to cleanup on exit
-trap cleanup EXIT INT TERM
 
 # Start mock backend
 echo "Starting mock backend on port $MOCK_PORT..."
@@ -166,10 +185,6 @@ else
     echo "✗ Test 3 FAILED: Expected 'Mock' but got different content"
     exit 1
 fi
-
-# Cleanup
-cleanup
-trap - EXIT INT TERM
 
 echo ""
 echo "Tests completed!"
