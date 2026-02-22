@@ -57,6 +57,32 @@ Or using uvicorn directly:
 poetry run uvicorn assignments.assignment_1.app:app --host 0.0.0.0 --port 8080
 ```
 
+### Mock Backend for Testing
+
+A mock backend server (`mock_backend.py`) is included for testing purposes. It always returns `"Mock"` as the response content, regardless of the input.
+
+To run the mock backend:
+
+```bash
+poetry run python assignments/assignment_1/mock_backend.py
+```
+
+The mock backend listens on port `8081` by default (configurable via `MOCK_PORT` environment variable).
+
+To test the gateway with the mock backend:
+
+1. Start the mock backend in one terminal:
+   ```bash
+   poetry run python assignments/assignment_1/mock_backend.py
+   ```
+
+2. Start the gateway with `BACKEND_URL` pointing to the mock in another terminal:
+   ```bash
+   BACKEND_URL=http://localhost:8081 poetry run python assignments/assignment_1/app.py
+   ```
+
+3. Send a request to the gateway - it will forward to the mock backend and return `"Mock"` as the content.
+
 ## Usage Examples
 
 ### Basic Request (Echo Mode)
@@ -127,6 +153,9 @@ bash assignments/assignment_1/test.sh
 ```
 
 This will test:
-1. Echo mode functionality
+1. Echo mode functionality (no backend)
 2. Request ID handling
+3. Backend forwarding with mock backend (automatically starts mock backend and gateway with `BACKEND_URL`)
+
+The test script will automatically start the mock backend and gateway in the background for Test 3, verify that requests are forwarded correctly, and clean up the processes when done.
 

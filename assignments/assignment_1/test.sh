@@ -77,4 +77,99 @@ else
 fi
 
 echo ""
+
+# Test 3: Backend forwarding with mock backend
+echo "Test 3: Backend forwarding with mock backend"
+MOCK_PORT="${MOCK_PORT:-8081}"
+GATEWAY_PORT="${GATEWAY_PORT:-8080}"
+MOCK_URL="http://localhost:$MOCK_PORT"
+GATEWAY_URL="http://localhost:$GATEWAY_PORT"
+
+# Cleanup function
+cleanup() {
+    echo ""
+    echo "Cleaning up background processes..."
+    [ -n "$MOCK_PID" ] && kill $MOCK_PID 2>/dev/null
+    [ -n "$GATEWAY_PID" ] && kill $GATEWAY_PID 2>/dev/null
+    wait $MOCK_PID 2>/dev/null
+    wait $GATEWAY_PID 2>/dev/null
+}
+
+# Set trap to cleanup on exit
+trap cleanup EXIT INT TERM
+
+# Start mock backend
+echo "Starting mock backend on port $MOCK_PORT..."
+cd "$(dirname "$0")"
+poetry run python mock_backend.py > /tmp/mock_backend.log 2>&1 &
+MOCK_PID=$!
+
+# Start gateway with BACKEND_URL
+echo "Starting gateway with BACKEND_URL=$MOCK_URL on port $GATEWAY_PORT..."
+BACKEND_URL=$MOCK_URL PORT=$GATEWAY_PORT poetry run python app.py > /tmp/gateway.log 2>&1 &
+GATEWAY_PID=$!
+
+# Wait for servers to start
+echo "Waiting for servers to start..."
+sleep 3
+
+# Check if servers are running
+if ! kill -0 $MOCK_PID 2>/dev/null; then
+    echo "✗ Test 3 FAILED: Mock backend failed to start"
+    cat /tmp/mock_backend.log
+    exit 1
+fi
+
+if ! kill -0 $GATEWAY_PID 2>/dev/null; then
+    echo "✗ Test 3 FAILED: Gateway failed to start"
+    cat /tmp/gateway.log
+    exit 1
+fi
+
+# Test health endpoints
+if ! curl -s "$MOCK_URL/healthz" > /dev/null; then
+    echo "✗ Test 3 FAILED: Mock backend health check failed"
+    exit 1
+fi
+
+if ! curl -s "$GATEWAY_URL/healthz" > /dev/null; then
+    echo "✗ Test 3 FAILED: Gateway health check failed"
+    exit 1
+fi
+
+# Send request to gateway
+echo "Sending POST /v1/chat/completions to gateway..."
+RESPONSE3=$(curl -s -X POST "$GATEWAY_URL/v1/chat/completions" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "Test with backend"}
+    ]
+  }')
+
+echo "Response:"
+echo "$RESPONSE3" | python3 -m json.tool
+echo ""
+
+# Check if response has required fields
+if echo "$RESPONSE3" | grep -q '"id"' && echo "$RESPONSE3" | grep -q '"choices"' && echo "$RESPONSE3" | grep -q '"usage"'; then
+    echo "✓ Test 3 PASSED: Response has required fields (id, choices, usage)"
+else
+    echo "✗ Test 3 FAILED: Missing required fields"
+    exit 1
+fi
+
+# Check if content is "Mock"
+if echo "$RESPONSE3" | grep -q '"Mock"'; then
+    echo "✓ Test 3 PASSED: Backend response content is 'Mock'"
+else
+    echo "✗ Test 3 FAILED: Expected 'Mock' but got different content"
+    exit 1
+fi
+
+# Cleanup
+cleanup
+trap - EXIT INT TERM
+
+echo ""
 echo "Tests completed!"

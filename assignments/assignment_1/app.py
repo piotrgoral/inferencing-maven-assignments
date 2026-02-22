@@ -5,24 +5,22 @@ from typing import Optional
 import httpx
 from fastapi import FastAPI, Request, Header
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+
+from models import (
+    Message,
+    ChatRequest,
+    BackendResponse,
+    Choice,
+    AssistantMessage,
+    GatewayResponse,
+    Usage,
+)
 
 app = FastAPI()
 
 # Config from environment
 PORT = int(os.getenv("PORT", "8080"))
 BACKEND_URL = os.getenv("BACKEND_URL")
-
-
-class Message(BaseModel):
-    role: str
-    content: str
-
-
-class ChatRequest(BaseModel):
-    messages: list[Message]
-    stream: bool = False
-    model: str = "default"
 
 
 def estimate_tokens(text: str) -> int:
@@ -38,27 +36,27 @@ def extract_last_user_message(messages: list[Message]) -> str:
     return ""
 
 
-def normalize_response(content: str, request_id: str, prompt: str) -> dict:
+def normalize_response(content: str, request_id: str, prompt: str) -> GatewayResponse:
     """Build OpenAI-style response shape."""
     prompt_tokens = estimate_tokens(prompt)
     completion_tokens = estimate_tokens(content)
 
-    return {
-        "id": request_id,
-        "object": "chat.completion",
-        "choices": [
-            {
-                "index": 0,
-                "message": {"role": "assistant", "content": content},
-                "finish_reason": "stop",
-            }
+    return GatewayResponse(
+        id=request_id,
+        object="chat.completion",
+        choices=[
+            Choice(
+                index=0,
+                message=AssistantMessage(content=content),
+                finish_reason="stop",
+            )
         ],
-        "usage": {
-            "prompt_tokens": prompt_tokens,
-            "completion_tokens": completion_tokens,
-            "total_tokens": prompt_tokens + completion_tokens,
-        },
-    }
+        usage=Usage(
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_tokens=prompt_tokens + completion_tokens,
+        ),
+    )
 
 
 @app.get("/healthz")
@@ -99,27 +97,18 @@ async def chat_completions(
                 backend_response.raise_for_status()
                 backend_data = backend_response.json()
 
-                # Extract content from backend response
-                if "choices" in backend_data and len(backend_data["choices"]) > 0:
-                    content = (
-                        backend_data["choices"][0].get("message", {}).get("content", "")
-                    )
-                else:
-                    content = str(backend_data)
+                backend_resp = BackendResponse.model_validate(backend_data)
+                content = backend_resp.choices[0].message.content
 
-                # Normalize response
                 response = normalize_response(content, req_id, prompt)
         except Exception as e:
-            # On backend error, fall back to echo
             content = f"Backend error: {str(e)}"
             response = normalize_response(content, req_id, prompt)
     else:
-        # Echo mode
         content = f"Echo: {prompt}"
         response = normalize_response(content, req_id, prompt)
 
-    # Return response with X-Request-ID header
-    return JSONResponse(content=response, headers={"X-Request-ID": req_id})
+    return JSONResponse(content=response.model_dump(), headers={"X-Request-ID": req_id})
 
 
 if __name__ == "__main__":
