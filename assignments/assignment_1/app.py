@@ -5,13 +5,15 @@ from typing import Optional
 
 import httpx
 from fastapi import FastAPI, Request, Header
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 
 from models import ChatRequest
 from gateway_logic import (
     extract_last_user_message,
     normalize_response,
     fetch_from_backend,
+    stream_from_backend,
+    echo_stream,
 )
 
 
@@ -54,7 +56,30 @@ async def chat_completions(
     # Extract last user message as prompt
     prompt = extract_last_user_message(request.messages)
 
-    # Forward to backend or echo
+    # Handle streaming requests
+    if request.stream:
+
+        async def event_generator():
+            if BACKEND_URL:
+                async for chunk in stream_from_backend(
+                    client=http_request.app.state.client,
+                    backend_url=BACKEND_URL,
+                    request=request,
+                    req_id=req_id,
+                    timeout=BACKEND_TIMEOUT,
+                ):
+                    yield chunk
+            else:
+                async for chunk in echo_stream(f"Echo: {prompt}", req_id):
+                    yield chunk
+
+        return StreamingResponse(
+            event_generator(),
+            media_type="text/event-stream",
+            headers={"X-Request-ID": req_id},
+        )
+
+    # Non-streaming path (existing behavior)
     try:
         content = (
             await fetch_from_backend(

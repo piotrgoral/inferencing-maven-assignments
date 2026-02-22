@@ -1,3 +1,5 @@
+import asyncio
+import json
 import httpx
 from models import (
     Message,
@@ -65,3 +67,80 @@ def normalize_response(content: str, request_id: str, prompt: str) -> GatewayRes
             total_tokens=prompt_tokens + completion_tokens,
         ),
     )
+
+
+async def echo_stream(content: str, req_id: str):
+    """Generate SSE chunks from a plain string, one character at a time."""
+    for char in content:
+        chunk = {
+            "id": req_id,
+            "object": "chat.completion.chunk",
+            "choices": [
+                {
+                    "index": 0,
+                    "delta": {"content": char},
+                    "finish_reason": None,
+                }
+            ],
+        }
+        yield f"data: {json.dumps(chunk)}\n\n"
+        await asyncio.sleep(0)  # yield to event loop
+    yield "data: [DONE]\n\n"
+
+
+async def stream_from_backend(
+    client: httpx.AsyncClient,
+    backend_url: str,
+    request: ChatRequest,
+    req_id: str,
+    timeout: float,
+):
+    """
+    Stream SSE from backend if it supports streaming, otherwise return
+    one SSE chunk with the full reply then [DONE].
+    """
+    url = f"{backend_url.rstrip('/')}/v1/chat/completions"
+
+    try:
+        async with client.stream(
+            "POST",
+            url,
+            json=request.model_dump(),
+            headers={"X-Request-ID": req_id},
+            timeout=timeout,
+        ) as response:
+            response.raise_for_status()
+
+            # Check if backend supports streaming
+            content_type = response.headers.get("content-type", "")
+            if "text/event-stream" in content_type:
+                # Backend supports streaming - proxy SSE chunks
+                async for line in response.aiter_lines():
+                    if line:
+                        yield f"{line}\n"
+            else:
+                # Backend doesn't support streaming - get full response and convert to SSE
+                full_response = await response.aread()
+                backend_data = json.loads(full_response)
+                backend_resp = BackendResponse.model_validate(backend_data)
+                content = backend_resp.choices[0].message.content
+
+                # Return one SSE chunk with full content, then [DONE]
+                chunk = {
+                    "id": req_id,
+                    "object": "chat.completion.chunk",
+                    "choices": [
+                        {
+                            "index": 0,
+                            "delta": {"content": content},
+                            "finish_reason": None,
+                        }
+                    ],
+                }
+                yield f"data: {json.dumps(chunk)}\n\n"
+                yield "data: [DONE]\n\n"
+    except Exception as e:
+        # On error, return error message as SSE chunk
+        error_content = f"Backend error: {str(e)}"
+        async for chunk in echo_stream(error_content, req_id):
+            yield chunk

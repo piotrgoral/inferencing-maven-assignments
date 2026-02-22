@@ -25,6 +25,18 @@ class Choice(BaseModel):
     finish_reason: str = "stop"
 
 
+# --- Streaming Response (SSE chunks) ---
+class DeltaMessage(BaseModel):
+    role: str | None = None
+    content: str | None = None
+
+
+class StreamChoice(BaseModel):
+    index: int = 0
+    delta: DeltaMessage
+    finish_reason: str | None = None
+
+
 class BackendResponse(BaseModel):
     choices: list[Choice]
 
