@@ -8,6 +8,9 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "fastapi>=0.129.2",
+    "uvicorn>=0.41.0",
+    "httpx>=0.28.1",
 ]
 
 
