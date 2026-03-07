@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 CONFIG_PATH="${CONFIG_PATH:-$ROOT_DIR/config.yaml}"
 GATEWAY_PORT="${GATEWAY_PORT:-8080}"
 MOCK_PORT="${MOCK_PORT:-8081}"
@@ -24,13 +24,13 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 echo "Starting mock backend on $MOCK_URL"
-cd "$ROOT_DIR/src"
-poetry run python mock_backend.py > /tmp/mock_backend.log 2>&1 &
+cd "$ROOT_DIR"
+poetry run python src/mock_backend.py > /tmp/mock_backend.log 2>&1 &
 MOCK_PID=$!
 sleep 1
 
 echo "Starting gateway on $GATEWAY_URL using config $CONFIG_PATH"
-CONFIG_PATH="$CONFIG_PATH" PORT="$GATEWAY_PORT" poetry run python app.py > /tmp/gateway.log 2>&1 &
+CONFIG_PATH="$CONFIG_PATH" PORT="$GATEWAY_PORT" poetry run python src/app.py > /tmp/gateway.log 2>&1 &
 GATEWAY_PID=$!
 sleep 2
 

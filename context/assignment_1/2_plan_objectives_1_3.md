@@ -9,10 +9,10 @@ todos:
     content: Write src/app.py (~80 lines)
     status: pending
   - id: readme
-    content: Write src/README.md with run instructions, env vars, and curl examples
+    content: Write README.md with run instructions, env vars, and curl examples
     status: pending
   - id: tests
-    content: Write src/test.sh with smoke-test curl commands
+    content: Write test.sh with smoke-test curl commands
     status: pending
 isProject: false
 ---

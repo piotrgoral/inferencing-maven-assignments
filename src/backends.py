@@ -1,21 +1,22 @@
 from __future__ import annotations
 
-from typing import Protocol
+from abc import ABC, abstractmethod
 
 import httpx
 
 from models import ChatRequest, BackendResponse
 
 
-class Backend(Protocol):
+class Backend(ABC):
     """Common backend interface with a single generate() method."""
 
+    @abstractmethod
     async def generate(
         self, prompt: str, request: ChatRequest, request_id: str | None = None
     ) -> str: ...
 
 
-class EchoBackend:
+class EchoBackend(Backend):
     """Simple echo backend; returns the prompt with a prefix."""
 
     async def generate(
@@ -24,7 +25,7 @@ class EchoBackend:
         return f"Echo: {prompt}"
 
 
-class RemoteHttpBackend:
+class RemoteHttpBackend(Backend):
     """HTTP backend that forwards the full request payload to a remote gateway."""
 
     def __init__(

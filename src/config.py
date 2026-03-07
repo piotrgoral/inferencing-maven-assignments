@@ -9,6 +9,11 @@ from pydantic import ValidationError
 from models import AppConfig
 
 
+def default_config_path() -> str:
+    # project root relative to this file
+    return str(Path(__file__).resolve().parent.parent / "config.yaml")
+
+
 def load_config(path: str | Path) -> AppConfig:
     config_path = Path(path)
     if not config_path.exists():

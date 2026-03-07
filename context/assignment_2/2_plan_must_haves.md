@@ -95,7 +95,7 @@ flowchart TD
 - Use the existing [mock_backend.py](/Users/piotr/Desktop/maven-inferencing/inferencing-maven-assignments/src/mock_backend.py) as the planned remote target for local demonstration/testing.
 - Keep dependencies minimal: if YAML is used at runtime, add only one lightweight YAML parser and avoid broader config frameworks unless clearly necessary.
 
-1. Update deliverables in [README.md](/Users/piotr/Desktop/maven-inferencing/inferencing-maven-assignments/src/README.md) and [test.sh](/Users/piotr/Desktop/maven-inferencing/inferencing-maven-assignments/src/test.sh)
+1. Update deliverables in [README.md](/Users/piotr/Desktop/maven-inferencing/inferencing-maven-assignments/README.md) and [test.sh](/Users/piotr/Desktop/maven-inferencing/inferencing-maven-assignments/test.sh)
 
 - README should explicitly cover:
   - how to run the gateway

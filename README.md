@@ -143,7 +143,7 @@ Returns: `{"status": "ok"}`
 Run the test script:
 
 ```bash
-bash src/test.sh
+bash test.sh
 ```
 
 The script automatically starts the mock backend, starts the gateway with `config.yaml`, and verifies:
