@@ -59,3 +59,15 @@ class GatewayResponse(BaseModel):
     object: str = "chat.completion"
     choices: list[Choice]
     usage: Usage
+    backend: str
+
+
+# --- Config Models ---
+class BackendConfig(BaseModel):
+    type: str
+    url: str | None = None
+
+
+class AppConfig(BaseModel):
+    default_backend: str
+    backends: dict[str, BackendConfig]

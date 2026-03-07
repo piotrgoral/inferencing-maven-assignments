@@ -6,13 +6,13 @@ todos:
     content: Add fastapi, uvicorn, httpx to pyproject.toml dependencies
     status: pending
   - id: gateway
-    content: Write assignments/assignment_1/app.py (~80 lines)
+    content: Write src/app.py (~80 lines)
     status: pending
   - id: readme
-    content: Write assignments/assignment_1/README.md with run instructions, env vars, and curl examples
+    content: Write README.md with run instructions, env vars, and curl examples
     status: pending
   - id: tests
-    content: Write assignments/assignment_1/test.sh with smoke-test curl commands
+    content: Write test.sh with smoke-test curl commands
     status: pending
 isProject: false
 ---
@@ -22,7 +22,7 @@ isProject: false
 ## File layout
 
 ```
-assignments/assignment_1/
+src/
 ├── app.py              # entire application (~80 lines)
 ├── README.md           # run instructions, env vars, curl examples
 └── test.sh             # curl-based smoke tests (objectives 2 & 3)

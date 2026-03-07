@@ -43,7 +43,7 @@ data: [DONE]
 
 ## Changes
 
-### 1. `[models.py](assignments/assignment_1/models.py)` — add streaming models
+### 1. `[models.py](src/models.py)` — add streaming models
 
 Add two new models used only for SSE chunks:
 
@@ -58,7 +58,7 @@ class StreamChoice(BaseModel):
     finish_reason: str | None = None
 ```
 
-### 2. `[mock_backend.py](assignments/assignment_1/mock_backend.py)` — add streaming endpoint
+### 2. `[mock_backend.py](src/mock_backend.py)` — add streaming endpoint
 
 Replace the single route with two behaviours based on `request.stream`:
 
@@ -78,12 +78,12 @@ async def char_stream(text: str, req_id: str):
     yield "data: [DONE]\n\n"
 ```
 
-### 3. `[gateway_logic.py](assignments/assignment_1/gateway_logic.py)` — add `stream_from_backend` + `echo_stream`
+### 3. `[gateway_logic.py](src/gateway_logic.py)` — add `stream_from_backend` + `echo_stream`
 
 - `stream_from_backend(client, backend_url, request, req_id, timeout)` — opens an `httpx` streaming request to the backend and **passes the raw SSE lines through** to an async generator.
 - `echo_stream(content, req_id)` — takes a plain string and yields it character-by-character as SSE chunks, then `[DONE]`. Used when `BACKEND_URL` is not set, or as the fallback when the backend returns non-streaming.
 
-### 4. `[app.py](assignments/assignment_1/app.py)` — branch on `request.stream`
+### 4. `[app.py](src/app.py)` — branch on `request.stream`
 
 Inside `chat_completions`, after determining `prompt`:
 
