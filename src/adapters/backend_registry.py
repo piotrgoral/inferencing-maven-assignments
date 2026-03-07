@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import httpx
 
-from adapters.backends import Backend, EchoBackend, RemoteHttpBackend
-from core.models import AppConfig
+from src.adapters.backends import Backend, EchoBackend, RemoteHttpBackend
+from src.core.models import AppConfig
 
 
 def build_backend_registry(

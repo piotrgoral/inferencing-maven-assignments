@@ -6,7 +6,7 @@ from typing import Any
 import yaml
 from pydantic import ValidationError
 
-from core.models import AppConfig
+from src.core.models import AppConfig
 
 
 def default_config_path() -> str:

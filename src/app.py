@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import logging
 import os
+import time
 import uuid
 from contextlib import asynccontextmanager
 from typing import Optional
@@ -9,11 +11,15 @@ import httpx
 from fastapi import FastAPI, Header, Request
 from fastapi.responses import JSONResponse
 
-from adapters.backend_registry import build_backend_registry
-from adapters.backends import Backend
-from core.config import default_config_path, load_config
-from core.models import AppConfig, ChatRequest
-from services.gateway import extract_last_user_message, normalize_response
+from src.adapters.backend_registry import build_backend_registry
+from src.adapters.backends import Backend
+from src.core.config import default_config_path, load_config
+from src.core.logger import configure_logging
+from src.core.models import AppConfig, ChatRequest
+from src.services.gateway import extract_last_user_message, normalize_response
+
+configure_logging()
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -33,6 +39,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+logger = logging.getLogger(__name__)
 
 PORT = int(os.getenv("PORT", "8080"))
 
@@ -41,6 +48,16 @@ PORT = int(os.getenv("PORT", "8080"))
 async def healthz():
     """Health check endpoint."""
     return {"status": "ok"}
+
+
+@app.get("/v1/backends")
+async def list_backends(http_request: Request):
+    """Return configured backends and the default backend name."""
+    config: AppConfig = http_request.app.state.config
+    return {
+        "default_backend": config.default_backend,
+        "backends": list(config.backends.keys()),
+    }
 
 
 @app.post("/v1/chat/completions")
@@ -77,11 +94,22 @@ async def chat_completions(
             headers={"X-Request-ID": req_id},
         )
 
+    start_time = time.perf_counter()
     try:
         content = await backend.generate(
             prompt=prompt, request=request, request_id=req_id
         )
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+        logger.info(
+            f"[chat_completions] success: req_id={req_id} "
+            f"backend={backend_name} latency_ms={elapsed_ms:.2f}"
+        )
     except Exception as exc:
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+        logger.exception(
+            f"[chat_completions] backend error: req_id={req_id} "
+            f"backend={backend_name} latency_ms={elapsed_ms:.2f}"
+        )
         return JSONResponse(
             status_code=502,
             content={"error": f"Backend error: {exc}"},

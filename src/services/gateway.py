@@ -3,7 +3,7 @@ import json
 
 import httpx
 
-from core.models import (
+from src.core.models import (
     AssistantMessage,
     BackendResponse,
     ChatCompletionChunk,

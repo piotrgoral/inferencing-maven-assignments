@@ -7,7 +7,7 @@ from typing import Optional
 from fastapi import FastAPI, Header
 from fastapi.responses import StreamingResponse
 
-from core.models import AssistantMessage, BackendResponse, ChatRequest, Choice
+from src.core.models import AssistantMessage, BackendResponse, ChatRequest, Choice
 
 app = FastAPI()
 
