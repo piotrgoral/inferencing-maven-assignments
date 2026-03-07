@@ -49,8 +49,10 @@ async def fetch_from_backend(
     return backend_resp.choices[0].message.content
 
 
-def normalize_response(content: str, request_id: str, prompt: str) -> GatewayResponse:
-    """Build OpenAI-style response shape."""
+def normalize_response(
+    content: str, request_id: str, prompt: str, backend: str
+) -> GatewayResponse:
+    """Build OpenAI-style response shape with backend metadata."""
     prompt_tokens = estimate_tokens(prompt)
     completion_tokens = estimate_tokens(content)
 
@@ -69,6 +71,7 @@ def normalize_response(content: str, request_id: str, prompt: str) -> GatewayRes
             completion_tokens=completion_tokens,
             total_tokens=prompt_tokens + completion_tokens,
         ),
+        backend=backend,
     )
 
 

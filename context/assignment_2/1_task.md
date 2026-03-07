@@ -1,12 +1,12 @@
 Extend your Class 1 gateway with backend abstraction, config-driven routing, and a remote backend
 
-## Overview
+# Overview
 
 In Class 1 (assignment_1) you built a minimal gateway with a single backend or echo. Today you saw how RelayServe extends that pattern to support multiple swappable backends routed by model name. Your homework is to apply that same pattern to your own gateway from Class 1.
 
 You are not reimplementing RelayServe. You are evolving your own code using the design principles from today.
 
-## Objective
+# Objective
 
 Extend your Class 1 gateway to:
 
@@ -20,7 +20,7 @@ Extend your Class 1 gateway to:
 
     5. Report which backend handled each request in the response metadata
 
-## Requirements
+# Requirements
 
 ### Must have:
 - Backend interface: define a common interface or base class with a single generate(prompt) method. Both backends must implement it. Your router must call only generate() - no if/else on backend type inside the handler.
