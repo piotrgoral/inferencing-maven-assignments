@@ -1,13 +1,13 @@
-import os
 import asyncio
 import json
+import os
 import uuid
 from typing import Optional
 
 from fastapi import FastAPI, Header
 from fastapi.responses import StreamingResponse
 
-from models import ChatRequest, BackendResponse, Choice, AssistantMessage
+from core.models import AssistantMessage, BackendResponse, ChatRequest, Choice
 
 app = FastAPI()
 
@@ -36,7 +36,7 @@ async def char_stream(text: str, req_id: str):
             ],
         }
         yield f"data: {json.dumps(chunk)}\n\n"
-        await asyncio.sleep(0)  # yield to event loop
+        await asyncio.sleep(0)
     yield "data: [DONE]\n\n"
 
 
@@ -46,10 +46,7 @@ async def chat_completions(
     x_request_id: Optional[str] = Header(None, alias="X-Request-ID"),
     request_id: Optional[str] = Header(None, alias="Request-Id"),
 ):
-    """
-    Mock backend endpoint that returns "Mock" as the response content.
-    Supports streaming when stream=True.
-    """
+    """Mock backend endpoint that returns 'Mock' as response content."""
     req_id = x_request_id or request_id or str(uuid.uuid4())
     text = "Mock"
 
@@ -58,8 +55,7 @@ async def chat_completions(
             char_stream(text, req_id),
             media_type="text/event-stream",
         )
-    else:
-        return BackendResponse(choices=[Choice(message=AssistantMessage(content=text))])
+    return BackendResponse(choices=[Choice(message=AssistantMessage(content=text))])
 
 
 if __name__ == "__main__":

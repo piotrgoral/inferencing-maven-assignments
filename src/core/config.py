@@ -6,12 +6,12 @@ from typing import Any
 import yaml
 from pydantic import ValidationError
 
-from models import AppConfig
+from core.models import AppConfig
 
 
 def default_config_path() -> str:
-    # project root relative to this file
-    return str(Path(__file__).resolve().parent.parent / "config.yaml")
+    # project root relative to src/core/config.py
+    return str(Path(__file__).resolve().parent.parent.parent / "config.yaml")
 
 
 def load_config(path: str | Path) -> AppConfig:

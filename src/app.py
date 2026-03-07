@@ -9,11 +9,11 @@ import httpx
 from fastapi import FastAPI, Header, Request
 from fastapi.responses import JSONResponse
 
-from backend_registry import build_backend_registry
-from backends import Backend
-from config import default_config_path, load_config
-from gateway_logic import extract_last_user_message, normalize_response
-from models import AppConfig, ChatRequest
+from adapters.backend_registry import build_backend_registry
+from adapters.backends import Backend
+from core.config import default_config_path, load_config
+from core.models import AppConfig, ChatRequest
+from services.gateway import extract_last_user_message, normalize_response
 
 
 @asynccontextmanager
@@ -60,9 +60,7 @@ async def chat_completions(
             content={"error": "Streaming is out of scope for this assignment."},
         )
 
-    # Get request ID from headers or generate UUID
     req_id = x_request_id or request_id or str(uuid.uuid4())
-
     prompt = extract_last_user_message(request.messages)
 
     backends: dict[str, Backend] = http_request.app.state.backends
@@ -93,7 +91,6 @@ async def chat_completions(
     response = normalize_response(
         content=content, request_id=req_id, prompt=prompt, backend=backend_name
     )
-
     return JSONResponse(content=response.model_dump(), headers={"X-Request-ID": req_id})
 
 

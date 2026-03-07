@@ -25,7 +25,7 @@ trap cleanup EXIT INT TERM
 
 echo "Starting mock backend on $MOCK_URL"
 cd "$ROOT_DIR"
-poetry run python src/mock_backend.py > /tmp/mock_backend.log 2>&1 &
+PYTHONPATH="$ROOT_DIR/src${PYTHONPATH:+:$PYTHONPATH}" poetry run python src/dev/mock_backend.py > /tmp/mock_backend.log 2>&1 &
 MOCK_PID=$!
 sleep 1
 

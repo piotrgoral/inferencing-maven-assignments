@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 import httpx
 
-from models import ChatRequest, BackendResponse
+from core.models import BackendResponse, ChatRequest
 
 
 class Backend(ABC):

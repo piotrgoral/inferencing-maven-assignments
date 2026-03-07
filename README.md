@@ -39,7 +39,7 @@ Environment variables:
 ### Start mock remote backend
 
 ```bash
-poetry run python src/mock_backend.py
+poetry run python src/dev/mock_backend.py
 ```
 
 Listens on port `8081` by default (`MOCK_PORT` env to override).
