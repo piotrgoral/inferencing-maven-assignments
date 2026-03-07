@@ -15,6 +15,8 @@ Key Features (User-Facing)
 - Out-of-the-box local/echo backend plus remote HTTP backend support.
 - Responses include which backend handled the request for traceability.
 - Request IDs are accepted or generated and echoed back for observability.
+- `GET /v1/backends` returns configured backend names and the default backend.
+- Per-request latency logging: each chat call logs backend name and elapsed ms.
 - Simple health check endpoint.
 
 How Requests Flow
@@ -35,6 +37,7 @@ Main Building Blocks (by role)
 ------------------------------
 - `src/app.py`: public API surface, lifecycle setup, request routing to the chosen backend.
 - `src/core/config.py`: reads and validates YAML configuration.
+- `src/core/logger.py`: basic logging setup (console, INFO) when none exists.
 - `src/core/models.py`: defines the request/response and config data shapes used across the app.
 - `src/adapters/backends.py`: backend interface plus local/echo and remote HTTP implementations.
 - `src/adapters/backend_registry.py`: assembles the configured backends and validates the default.
