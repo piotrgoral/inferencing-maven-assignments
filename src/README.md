@@ -36,19 +36,19 @@ Environment variables:
 ### Echo Mode (no backend)
 
 ```bash
-poetry run python assignments/assignment_1/app.py
+poetry run python src/app.py
 ```
 
 Or with custom port:
 
 ```bash
-PORT=3000 poetry run python assignments/assignment_1/app.py
+PORT=3000 poetry run python src/app.py
 ```
 
 ### With Backend
 
 ```bash
-BACKEND_URL=http://localhost:8000 poetry run python assignments/assignment_1/app.py
+BACKEND_URL=http://localhost:8000 poetry run python src/app.py
 ```
 
 Or using uvicorn directly:
@@ -64,7 +64,7 @@ A mock backend server (`mock_backend.py`) is included for testing purposes. It a
 To run the mock backend:
 
 ```bash
-poetry run python assignments/assignment_1/mock_backend.py
+poetry run python src/mock_backend.py
 ```
 
 The mock backend listens on port `8081` by default (configurable via `MOCK_PORT` environment variable).
@@ -73,12 +73,12 @@ To test the gateway with the mock backend:
 
 1. Start the mock backend in one terminal:
    ```bash
-   poetry run python assignments/assignment_1/mock_backend.py
+   poetry run python src/mock_backend.py
    ```
 
 2. Start the gateway with `BACKEND_URL` pointing to the mock in another terminal:
    ```bash
-   BACKEND_URL=http://localhost:8081 poetry run python assignments/assignment_1/app.py
+   BACKEND_URL=http://localhost:8081 poetry run python src/app.py
    ```
 
 3. Send a request to the gateway - it will forward to the mock backend and return `"Mock"` as the content.
@@ -149,7 +149,7 @@ Returns: `{"status": "ok"}`
 Run the test script:
 
 ```bash
-bash assignments/assignment_1/test.sh
+bash src/test.sh
 ```
 
 This will test:
